@@ -1,0 +1,26 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "Full Stack Development Bootcamp - Node.js &amp; MySQL",
+  "main": "bamazonCustomer.js",
+  "dependencies": {
+    "dotenv": "^8.1.0",
+    "inquirer": "^7.0.0",
+    "mysql": "^2.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sdaniels6363/bamazon.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/sdaniels6363/bamazon/issues"
+  },
+  "homepage": "https://github.com/sdaniels6363/bamazon#readme"
+}
