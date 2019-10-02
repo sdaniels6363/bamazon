@@ -7,10 +7,10 @@ CREATE TABLE products(
   product_name VARCHAR(255) NOT NULL,
   department_name VARCHAR(50) NOT NULL,
   price DECIMAL(6,2) NOT NULL,
-  stock_qantity INT
+  stock_quantity INT
 );
 
-INSERT INTO products (product_name, department_name, price, stock_qantity) 
+INSERT INTO products (product_name, department_name, price, stock_quantity) 
   VALUES ('Airpods','Electronics',159.99,100),
          ('Soccer Ball','Sports',19.99,200),
          ('Microwave','Home Goods',59.99,50),
