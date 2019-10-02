@@ -35,7 +35,7 @@ function displayInventory(inventory) {
     message: "What would you like to purchase?",
     name: "itemSelection"
   }).then(function (choice) {
-    console.log(`User selected ${choice}`);
+    console.log(`User selected ${choice.itemSelection}`);
   });
 }
 
