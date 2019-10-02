@@ -19,6 +19,7 @@ var con = mysql.createConnection({
   database: "bamazon"
 });
 
+
 con.connect(function(err){
   if (err) {
     throw err;
@@ -32,4 +33,5 @@ con.connect(function(err){
     displayInventory(inventory);
 
   });
+  con.end(); //close connections
 });
