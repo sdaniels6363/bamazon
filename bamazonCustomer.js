@@ -9,35 +9,66 @@ dotenv.config();
 
 function displayInventory(inventory) {
 
-  var itemList = [];
   for (i = 0; i < inventory.length; i++) {
     var item = inventory[i];
-    var itemObj = {
-      item_id: item.item_id,
-      product_name: item.product_name,
-      department_name: item.department_name,
-      price: item.price,
-      stock_quantity: item.stock_quantity
-    }
-    itemList.push(JSON.stringify(itemObj));
+    console.log(`Item ID: ${item.item_id} | Item Name: ${item.product_name} | Dept Name: ${item.department_name} | Price: ${item.price} | Stock: ${item.stock_quantity}`)
   }
+}
 
-  inquirer.prompt({
-    type: "list",
-    choices: function () {
-      var choicesArr = [];
-      for (i = 0; i < itemList.length; i++) {
-        var choice = JSON.parse(itemList[i]);
-        choicesArr.push(`Item Name: ${choice.product_name} | Dept Name: ${choice.department_name} | Price: ${choice.price} | Stock: ${choice.stock_quantity}`);
-      }
-      return choicesArr;
-    },
-    message: "What would you like to purchase?",
+function decreaseStock(qty){
+
+}
+
+function userOrders(){
+  inquirer.prompt([{
+    type: "input",
+    message: "Enter the Item ID of the Item you'd like to purchase:",
     name: "itemSelection"
-  }).then(function (choice) {
-    console.log(`User selected ${choice.itemSelection}`);
+  }, {
+    type: "input",
+    message: "How many units would you like to purchase?:",
+    name: "amountDesired"
+  },{
+    type: "confirm",
+    message: "Are you sure you wish to purchase the above product and quatity?",
+    name: "readyToBuy"
+  },{
+    type: "confirm",
+    message: "Are you finished shopping?",
+    name: "doneShopping"
+  }
+]).then(function (response) {
+
+    if (response.doneShopping){
+      // if the user is done shopping total up their cost, and display the items in their cart.
+      itemsInCart.push()
+      console.log(`Thank you for shopping at bamazon, your total is: ${parseFloat(totalCost,2)}`)
+    } else {
+      runProgram();
+    }
+
+    if (response.readyToBuy){
+      con.query(`SELECT * FROM products WHERE item_id=${id}`,function(err,res){
+        if (err) throw err;
+
+      });
+    }
+    console.log(`User selected ${response.itemSelection}`);
   });
 }
+
+function runProgram(){
+  con.query("SELECT * FROM products;", function (err, result) {
+    if (err) throw err;
+    var inventory = result;
+    displayInventory(inventory);
+    userOrders();
+  });
+}
+
+// global variables
+var totalCost = 0;
+var itemsInCart = [];
 
 // Creates initial sql connection to the database
 var con = mysql.createConnection({
@@ -48,18 +79,12 @@ var con = mysql.createConnection({
   database: "bamazon"
 });
 
-
 con.connect(function (err) {
   if (err) {
     throw err;
   }
   console.log("connected");
+  runProgram();
 
-
-  con.query("SELECT * FROM products;", function (err, result) {
-    if (err) throw err;
-    var inventory = result;
-    displayInventory(inventory);
-  });
   con.end(); //close connections
 });
