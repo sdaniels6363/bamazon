@@ -121,7 +121,7 @@ function userOrders() {
           name: "addToCart"
         }, {
           type: "confirm",
-          message: "Are you finished shopping?",
+          message: "Are you ready to checkout?",
           name: "checkout"
         }]).then(function (response) {
 
