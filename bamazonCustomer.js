@@ -7,7 +7,6 @@ dotenv.config();
 
 // global variables
 var cart = [];
-var totalCost = parseFloat(0).toFixed(2);
 // functions
 
 function displayInventory(inventory) {
@@ -27,12 +26,16 @@ function displayCart(cart) {
 }
 
 function calcTotal(cart) {
-
+  totalCost = 0;
   for (i = 0; i < cart.length; i++) {
-    var totalCost = parseFloat(totalCost).toFixed(2) + parseFloat(cart[i].subtotal).toFixed(2);
+    var val = cart[i].subtotal;
+    var val = parseFloat(val);
+
+    totalCost = totalCost + val;
   }
-  console.log(`Total: $${totalCost}`);
+  console.log(`Total: $${parseFloat(totalCost).toFixed(2)}`);
 };
+
 
 function receipt(cart) {
   console.log("Your cart contains the following items:");
@@ -59,9 +62,9 @@ function userOrders() {
     type: "input",
     message: "Enter the Item ID of the Item you'd like to purchase:",
     name: "itemSelection",
-    validate: function validItemNo(val){
+    validate: function validItemNo(val) {
       var num = parseInt(val)
-      if (num >= 1 && num <= inventory.length){
+      if (num >= 1 && num <= inventory.length) {
         return true;
       } else {
         console.log("\n\nPlease enter a valid item number.\n")
@@ -206,7 +209,7 @@ con.connect(function (err) {
   if (err) {
     throw err;
   }
-  console.log("connected");
+
   runProgram();
 
 });
