@@ -46,13 +46,11 @@ function receipt(cart) {
 function decreaseStock(cart) {
   // only used after the user has checked out.
   for (i = 0; i < cart.length; i++) {
-    var item = cart[i]; // write to var for readability
-
-    var itemId = item.item_id;
-    var qtyPurchased = item.qty;
-    // con.query(`UPDATE products SET stock_quantity = "${newQuanity}" WHERE item_id="${itemId}";`, function (err, result) {
-    //   if (err) throw err;
-    // });
+    var remainingStock = cart[i].remaining_stock; // write to var for readability
+    var itemId = cart[i].item_id;
+    con.query(`UPDATE products SET stock_quantity = "${remainingStock}" WHERE item_id="${itemId}";`, function (err) {
+      if (err) throw err;
+    });
   };
 };
 
@@ -132,7 +130,8 @@ function userOrders() {
               item_id: item.item_id,
               product_name: item.product_name,
               qty: qty,
-              subtotal: parseFloat(qty * item.price).toFixed(2)
+              subtotal: parseFloat(qty * item.price).toFixed(2),
+              remaining_stock: remainingStock
             };
             // display total cost to customer, and list of items being purchased then exit connection
             console.log(cart);
@@ -148,7 +147,8 @@ function userOrders() {
               item_id: item.item_id,
               product_name: item.product_name,
               qty: qty,
-              subtotal: parseFloat(qty * item.price).toFixed(2)
+              subtotal: parseFloat(qty * item.price).toFixed(2),
+              remaining_stock: remainingStock
             };
             // add item to cart
             cart.push(newItem);
