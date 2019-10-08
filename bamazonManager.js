@@ -4,24 +4,29 @@ var dotenv = require('dotenv');
 
 dotenv.config();
 
+inventory = [];
+
 function keepRunning() {
-  inquirer.prompt({
-    message: "Would you like to continue?",
-    type: "confirm",
-    name: "confirm"
-  }).then(function (response) {
-    if (response.confirm) {
-      runProgram();
-    } else {
-      return false;
-    }
-  });
+  setTimeout(function(){
+    console.log("\n")
+    inquirer.prompt({
+      message: "Would you like to continue?",
+      type: "confirm",
+      name: "confirm"
+    }).then(function (response) {
+      if (response.confirm) {
+        runProgram();
+      } else {
+        con.end();
+      }
+    });
+  
+  },1000);
 }
 
 function displayInventory() {
-  con.query("SELECT * FROM products;", function (err, result) {
+    con.query("SELECT * FROM products;", function (err, result) {
     if (err) throw err;
-    inventory = [];
 
     // Print every item from the inventory.
     for (i = 0; i < result.length; i++) {
@@ -29,7 +34,7 @@ function displayInventory() {
       console.log(`${item.item_id}) ${item.product_name} | Dept: ${item.department_name} | Price: ${item.price} | Stock: ${item.stock_quantity}`);
       inventory.push(item.item_id);
     }
-    console.log("\n\n")
+    console.log("\n")
   });
   keepRunning();
 }
@@ -38,8 +43,7 @@ function viewLowInventory() {
   con.query(`SELECT * FROM products WHERE stock_quantity<="5";`, function (err, response) {
     if (err) throw err;
     if (response) {
-      console.log((response));
-      console.log(`\nThe following Items are low on inventory:`)
+      console.log(`The following Items are low on inventory:`)
       if (response.length > 1) {
         for (i = 0; i < response.length; i++) {
           var item = response[i];
@@ -55,14 +59,13 @@ function viewLowInventory() {
         var prodName = item.product_name;
         var deptName = item.department_name;
         var qty = item.stock_quantity;
-        console.log(`${itemId}) Product Name: ${prodName} | Dept Name: ${deptName} | Qty: ${qty}\n`)
+        console.log(`${itemId}) Product Name: ${prodName} | Dept Name: ${deptName} | Qty: ${qty}`)
       }
 
     } else {
-      console.log("No inventory is dangerously low.")
+      console.log("No inventory is low.")
     }
   });
-  keepRunning();
 };
 
 function increaseStock() {
@@ -70,12 +73,11 @@ function increaseStock() {
     message: "What Item ID would you like add stock for?",
     type: "input",
     name: "itemId",
-    validate: function (itemId) {
-      var num = parseInt(itemId)
-      if (inventory.contains(num)) {
+    validate: function (val) {
+      if (inventory.contains(val)) {
         return true;
       } else {
-        console.log("\n\nPlease enter a valid item number.\n")
+        console.log("Please enter a valid item number.")
       }
     }
   }, {
@@ -103,10 +105,10 @@ function increaseStock() {
     con.query(`UPDATE products SET stock_quantity = "${newStock}" WHERE item_id="${itemId}";`, function (err, response) {
       if (err) throw err;
       // print response
-      console.log(response);
-      // start over program
-      keepRunning();
+      console.log(`Quantity for ${itemId} has been updated to: ${response.stock_quantity}!`);
+
     });
+
   });
 };
 
@@ -144,12 +146,10 @@ function addNewProduct() {
     var price = parseFloat(response.price).toFixed(2);
     var quantity = parseInt(response.quantity);
 
-    con.query(`INSERT INTO products(product_name,department_name,price,stock_quantity)
-    VALUES(${prodName},${deptName},${price},${quantity});`, function (err, response) {
+    con.query(`INSERT INTO products(product_name,department_name,price,stock_quantity) VALUES(${prodName},${deptName},${price},${quantity});`, function (err, response) {
       if (err) throw err;
       console.log(response);
     });
-    keepRunning();
   });
 }
 
@@ -168,24 +168,23 @@ function runProgram() {
       case "View Products for Sale":
         displayInventory();
         break;
-
       case "View Low Inventory":
         viewLowInventory();
         break;
-
       case "Add to Inventory":
         displayInventory();
-        increaseStock();
+        setTimeout(increaseStock,2000);
+        // increaseStock();
         break;
-
       case "Add New Product":
         addNewProduct();
         break;
-
     }
+    // keepRunning();
   });
-
 }
+
+
 
 
 // Creates initial sql connection to the database
@@ -201,7 +200,6 @@ con.connect(function (err) {
   if (err) {
     throw err;
   }
-
   runProgram();
 
 });
