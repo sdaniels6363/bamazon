@@ -137,7 +137,6 @@ function userOrders() {
               remaining_stock: remainingStock
             };
             // display total cost to customer, and list of items being purchased then exit connection
-            console.log(cart);
             cart.push(newItem);
             receipt(cart);
             decreaseStock(cart);
