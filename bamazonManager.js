@@ -21,7 +21,7 @@ function keepRunning() {
       }
     });
 
-  }, 1000);
+  }, 500);
 }
 
 function displayInventory() {
