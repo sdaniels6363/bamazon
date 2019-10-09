@@ -25,24 +25,25 @@ function keepRunning() {
 }
 
 function displayInventory() {
-  if (inventory.length === 0){
+  if (inventory.length === 0) {
     // if this is the initial pass
     con.query("SELECT * FROM products;", function (err, result) {
       if (err) throw err;
-  
+
       // Print every item from the inventory.
       for (i = 0; i < result.length; i++) {
         var item = result[i];
         console.log(`${item.item_id}) ${item.product_name} | Dept: ${item.department_name} | Price: ${item.price} | Stock: ${item.stock_quantity}`);
         inventory.push(item.item_id);
       }
+      console.log("\n");
     });
   } else {
     // if inventory has been defined before, erase it, and re run, but this time prompt to keep running.
     inventory = [];
     con.query("SELECT * FROM products;", function (err, result) {
       if (err) throw err;
-  
+
       // Print every item from the inventory.
       for (i = 0; i < result.length; i++) {
         var item = result[i];
@@ -122,7 +123,7 @@ function increaseStock() {
       con.query(`UPDATE products SET stock_quantity = "${newStock}" WHERE item_id="${itemId}";`, function (err, response) {
         if (err) throw err;
         // print response
-        console.log(`Quantity for ${itemId} has been updated to: ${newStock}!`);
+        console.log(`Quantity for Item ID: ${itemId} has been updated to: ${newStock}!`);
       });
     });
 
@@ -173,16 +174,17 @@ function addNewProduct() {
   });
 }
 
-
-
 function runProgram() {
-  if (initialConnection){
+  if (initialConnection) {
     console.log(`
 ----------------------------------------------------
 |    Welcome to the bamazon management console.    |
 ----------------------------------------------------
-    `)
+
+Here is the current inventory:
+`)
     initialConnection = false; // set to false after initial login.
+    displayInventory();
   } else {
     console.log(`
 -------------------------------------
@@ -190,11 +192,11 @@ function runProgram() {
 -------------------------------------
     `)
   }
-  setTimeout(function(){
+  setTimeout(function () {
     inquirer.prompt({
       message: "What would you like to do?",
       type: "list",
-      choices: ["View Products for Sale", "View Low Inventory", "Increase stock of existing inventory", "Add New Product"],
+      choices: ["View Products for Sale", "View Low Inventory", "Increase stock of existing inventory", "Add New Product","Exit"],
       name: "choice"
     }).then(function (selection) {
       var choice = selection.choice;
@@ -206,20 +208,18 @@ function runProgram() {
           viewLowInventory();
           break;
         case "Increase stock of existing inventory":
-            displayInventory();
           increaseStock();
           break;
         case "Add New Product":
           addNewProduct();
           break;
+        case "Exit":
+          con.end();
       }
     });
-  },2000)
+  }, 500)
 
 }
-
-
-
 
 // Creates initial sql connection to the database
 var con = mysql.createConnection({
@@ -233,8 +233,7 @@ var con = mysql.createConnection({
 con.connect(function (err) {
   // make connection to sql
   if (err) throw err;
-    console.log ("Connected successfully to database\n")
-  }
+}
 );
 var initialConnection = true; // will change to false after program starts.
 runProgram();
