@@ -7,7 +7,7 @@ dotenv.config();
 inventory = [];
 
 function keepRunning() {
-  setTimeout(function(){
+  setTimeout(function () {
     console.log("\n")
     inquirer.prompt({
       message: "Would you like to continue?",
@@ -20,12 +20,12 @@ function keepRunning() {
         con.end();
       }
     });
-  
-  },1000);
+
+  }, 1000);
 }
 
 function displayInventory() {
-    con.query("SELECT * FROM products;", function (err, result) {
+  con.query("SELECT * FROM products;", function (err, result) {
     if (err) throw err;
 
     // Print every item from the inventory.
@@ -43,8 +43,8 @@ function viewLowInventory() {
   con.query(`SELECT * FROM products WHERE stock_quantity<="5";`, function (err, response) {
     if (err) throw err;
     if (response) {
-      console.log(`The following Items are low on inventory:`)
       if (response.length > 1) {
+        console.log(`\nThe following Items are low on inventory:\n`)
         for (i = 0; i < response.length; i++) {
           var item = response[i];
           var itemId = item.item_id;
@@ -53,17 +53,18 @@ function viewLowInventory() {
           var qty = item.stock_quantity;
           console.log(`${itemId}) Product Name: ${prodName} | Dept Name: ${deptName} | Qty: ${qty}`)
         }
-      } else {
+      } else if (response.length === 1) {
+        console.log(`\nThe following Items are low on inventory:\n`)
         var item = response[0];
         var itemId = item.item_id;
         var prodName = item.product_name;
         var deptName = item.department_name;
         var qty = item.stock_quantity;
         console.log(`${itemId}) Product Name: ${prodName} | Dept Name: ${deptName} | Qty: ${qty}`)
+      } else {
+        console.log("\nNo inventory is low.\n")
       }
-
-    } else {
-      console.log("No inventory is low.")
+      keepRunning();
     }
   });
 };
@@ -108,7 +109,7 @@ function increaseStock() {
       console.log(`Quantity for ${itemId} has been updated to: ${response.stock_quantity}!`);
 
     });
-
+    keepRunning();
   });
 };
 
@@ -134,21 +135,23 @@ function addNewProduct() {
     type: "input",
     name: "quantity",
     validate: function (qty) {
-      if (typeof (qty) !== "number") {
+      if (typeof (parseInt(qty)) !== "number") {
         console.log("Please enter a valid number!");
         return false;
       }
       return true;
     }
-  }]).then(function (response) {
+  }
+  ]).then(function (response) {
     var prodName = response.prodName;
     var deptName = response.deptName;
     var price = parseFloat(response.price).toFixed(2);
     var quantity = parseInt(response.quantity);
 
-    con.query(`INSERT INTO products(product_name,department_name,price,stock_quantity) VALUES(${prodName},${deptName},${price},${quantity});`, function (err, response) {
+    con.query(`INSERT INTO products (product_name,department_name,price,stock_quantity) VALUES("${prodName}","${deptName}",${price},${quantity});`, function (err, response) {
       if (err) throw err;
-      console.log(response);
+      console.log(`${prodName} was added to bamazon's inventory, the new product ID is ${response.insertId}`);
+      keepRunning();
     });
   });
 }
@@ -173,14 +176,12 @@ function runProgram() {
         break;
       case "Add to Inventory":
         displayInventory();
-        setTimeout(increaseStock,2000);
-        // increaseStock();
+        increaseStock();
         break;
       case "Add New Product":
         addNewProduct();
         break;
     }
-    // keepRunning();
   });
 }
 
