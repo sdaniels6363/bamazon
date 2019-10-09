@@ -5,7 +5,7 @@ The purpose of this homework assignment was to make a really bad version of amaz
 
 The app makes use of the following node.js packages:
 * mysql - used to connect to our MySQL database that will house the store inventory.
-* inquiere - used to provide the interface to our CLI application.
+* inquirer - used to provide the interface to our CLI application.
 * dotenv - used to access environmental variables, which is what we use to store the MySQL credentials.
 
 ## __Instructions__
