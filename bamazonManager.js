@@ -15,9 +15,9 @@ function keepRunning() {
       name: "confirm"
     }).then(function (response) {
       if (response.confirm) {
-        runProgram();
+        runProgram(); // start program over and create a new session.
       } else {
-        con.end();
+        con.end(); // on program exit, close mysql connection
       }
     });
 
@@ -25,18 +25,33 @@ function keepRunning() {
 }
 
 function displayInventory() {
-  con.query("SELECT * FROM products;", function (err, result) {
-    if (err) throw err;
-
-    // Print every item from the inventory.
-    for (i = 0; i < result.length; i++) {
-      var item = result[i];
-      console.log(`${item.item_id}) ${item.product_name} | Dept: ${item.department_name} | Price: ${item.price} | Stock: ${item.stock_quantity}`);
-      inventory.push(item.item_id);
-    }
-    console.log("\n")
-  });
-  keepRunning();
+  if (inventory.length === 0){
+    // if this is the initial pass
+    con.query("SELECT * FROM products;", function (err, result) {
+      if (err) throw err;
+  
+      // Print every item from the inventory.
+      for (i = 0; i < result.length; i++) {
+        var item = result[i];
+        console.log(`${item.item_id}) ${item.product_name} | Dept: ${item.department_name} | Price: ${item.price} | Stock: ${item.stock_quantity}`);
+        inventory.push(item.item_id);
+      }
+    });
+  } else {
+    // if inventory has been defined before, erase it, and re run, but this time prompt to keep running.
+    inventory = [];
+    con.query("SELECT * FROM products;", function (err, result) {
+      if (err) throw err;
+  
+      // Print every item from the inventory.
+      for (i = 0; i < result.length; i++) {
+        var item = result[i];
+        console.log(`${item.item_id}) ${item.product_name} | Dept: ${item.department_name} | Price: ${item.price} | Stock: ${item.stock_quantity}`);
+        inventory.push(item.item_id);
+      }
+    });
+    keepRunning();
+  }
 }
 
 function viewLowInventory() {
@@ -70,12 +85,13 @@ function viewLowInventory() {
 };
 
 function increaseStock() {
+
   inquirer.prompt([{
     message: "What Item ID would you like add stock for?",
     type: "input",
     name: "itemId",
     validate: function (val) {
-      if (inventory.contains(val)) {
+      if (inventory.includes(parseInt(val))) {
         return true;
       } else {
         console.log("Please enter a valid item number.")
@@ -86,29 +102,30 @@ function increaseStock() {
     type: "input",
     name: "qtyToAdd",
     validate: function (val) {
-      if (typeof (val) !== "number" || parseInt(val) <= 0) {
+      if (typeof (parseInt(val)) !== "number" || parseInt(val) <= 0) {
         console.log("Please enter a valid number, or number greater than 0.");
         return false;
       } else {
         return true;
       }
     }
-  }]).then(function (response) {
+  }
+  ]).then(function (response) {
     var stockToAdd = response.qtyToAdd;
     var itemId = response.itemId;
     // this query determines current stock
     con.query(`SELECT stock_quantity FROM products WHERE item_id="${itemId}";`, function (err, response) {
       if (err) throw err;
-      currentStock = response[0];
+      currentStock = response[0].stock_quantity;
+      // this query updates the stock.
+      var newStock = parseInt(currentStock) + parseInt(stockToAdd);
+      con.query(`UPDATE products SET stock_quantity = "${newStock}" WHERE item_id="${itemId}";`, function (err, response) {
+        if (err) throw err;
+        // print response
+        console.log(`Quantity for ${itemId} has been updated to: ${newStock}!`);
+      });
     });
-    // this query updates the stock.
-    var newStock = currentStock + stockToAdd;
-    con.query(`UPDATE products SET stock_quantity = "${newStock}" WHERE item_id="${itemId}";`, function (err, response) {
-      if (err) throw err;
-      // print response
-      console.log(`Quantity for ${itemId} has been updated to: ${response.stock_quantity}!`);
 
-    });
     keepRunning();
   });
 };
@@ -151,38 +168,54 @@ function addNewProduct() {
     con.query(`INSERT INTO products (product_name,department_name,price,stock_quantity) VALUES("${prodName}","${deptName}",${price},${quantity});`, function (err, response) {
       if (err) throw err;
       console.log(`${prodName} was added to bamazon's inventory, the new product ID is ${response.insertId}`);
-      keepRunning();
     });
+    keepRunning();
   });
 }
 
 
 
 function runProgram() {
+  if (initialConnection){
+    console.log(`
+----------------------------------------------------
+|    Welcome to the bamazon management console.    |
+----------------------------------------------------
+    `)
+    initialConnection = false; // set to false after initial login.
+  } else {
+    console.log(`
+-------------------------------------
+|    bamazon management console.    |
+-------------------------------------
+    `)
+  }
+  setTimeout(function(){
+    inquirer.prompt({
+      message: "What would you like to do?",
+      type: "list",
+      choices: ["View Products for Sale", "View Low Inventory", "Increase stock of existing inventory", "Add New Product"],
+      name: "choice"
+    }).then(function (selection) {
+      var choice = selection.choice;
+      switch (choice) {
+        case "View Products for Sale":
+          displayInventory();
+          break;
+        case "View Low Inventory":
+          viewLowInventory();
+          break;
+        case "Increase stock of existing inventory":
+            displayInventory();
+          increaseStock();
+          break;
+        case "Add New Product":
+          addNewProduct();
+          break;
+      }
+    });
+  },2000)
 
-  inquirer.prompt({
-    message: "What would you like to do?",
-    type: "list",
-    choices: ["View Products for Sale", "View Low Inventory", "Add to Inventory", "Add New Product"],
-    name: "choice"
-  }).then(function (selection) {
-    var choice = selection.choice;
-    switch (choice) {
-      case "View Products for Sale":
-        displayInventory();
-        break;
-      case "View Low Inventory":
-        viewLowInventory();
-        break;
-      case "Add to Inventory":
-        displayInventory();
-        increaseStock();
-        break;
-      case "Add New Product":
-        addNewProduct();
-        break;
-    }
-  });
 }
 
 
@@ -198,10 +231,11 @@ var con = mysql.createConnection({
 });
 
 con.connect(function (err) {
-  if (err) {
-    throw err;
+  // make connection to sql
+  if (err) throw err;
+    console.log ("Connected successfully to database\n")
   }
-  runProgram();
-
-});
+);
+var initialConnection = true; // will change to false after program starts.
+runProgram();
 
